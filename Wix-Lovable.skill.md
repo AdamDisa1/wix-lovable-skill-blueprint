@@ -6,6 +6,39 @@ This file provides the complete, end-to-end architectural logic, data models, fe
 
 ---
 
+## 0. Pre-Flight Protocol & User Onboarding (Gatekeeper)
+
+
+### CRITICAL AGENT BEHAVIOR: STOP & ASSESS
+
+Before generating any directories, initializing packages, or writing code components, you MUST scan the user's input for a Wix Headless Client ID. 
+
+
+1. **If NO Client ID is provided:** 
+   You are strictly commanded to **STOP ALL PROGRESSION**. Do not write any code files outlined in the sections below. You must pause and wait for the user to provide this value.
+   
+2. **Conversationally Guide the User:** 
+   Respond to the user with a helpful peer-like tone, explaining exactly what they need to do next based on their current setup status:
+
+
+   - **If they already have a Wix site but don't know their ID:** 
+     Guide them with these exact steps: *Go to your Wix Dashboard ➔ Settings ➔ Headless Settings ➔ Client ID. If a public client ID exists, copy it and paste it back to me here. If not, click "Create App / Headless Project" to generate a new Public Client ID.*
+   
+   - **If they do not have a Wix Account:** 
+     Provide them with the URL `https://manage.wix.com/` and tell them to sign up for a free account.
+   
+   - **Vertical Alignment Guidance:** 
+     Analyze the user's initial prompt concept (e.g., a bookstore, a yoga studio, a festival portal) and explicitly instruct them on which Wix App module they must activate in their Wix dashboard so the data schema matches:
+     * *For retail/products:* "Once in your dashboard, make sure to install **Wix Stores** and add at least 1-2 items to your catalog."
+     * *For service scheduling:* "Once in your dashboard, make sure to activate **Wix Bookings** and create at least one sample service/slot."
+     * *For ticket sales:* "Once in your dashboard, install **Wix Events** and create a draft event."
+     * *For unstructured custom data:* "Once in your dashboard, open the **CMS** and create a Custom Collection."
+     * *For restaurants:* "Once in your dashboard, add **Wix Restaurants Menus**."
+
+
+3. **Exception Rule:** 
+   Only proceed to Section 1 without a Client ID if the user explicitly responds with an instruction like *"Just build it in mock/offline mode for now, I'll add the ID later."* Otherwise, keep the gate shut and wait for their token.
+
 
 ## 1. System Architecture & Package Resolution
 
@@ -23,6 +56,7 @@ The agent must parse the user's specific app intent (e.g., bookstore, gym bookin
 
 
 ### Shared Client Initialization (`src/lib/wixClient.ts`)
+
 Generate this file using the explicit imports determined by the chosen vertical.
 
 
