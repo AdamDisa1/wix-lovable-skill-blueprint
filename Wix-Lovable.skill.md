@@ -1,18 +1,12 @@
 # Wix-Lovable AI Skill Blueprint (`Wix-Lovable.skill.md`)
 
-
 This file provides the complete, end-to-end architectural logic, data models, fetching hooks, and state management rules required to seamlessly connect a Lovable frontend to any Wix Headless backend vertical. 
 
-
 ---
-
 ## 0. Pre-Flight Protocol & User Onboarding (Gatekeeper)
 
-
 ### CRITICAL AGENT BEHAVIOR: STOP & ASSESS
-
 Before generating any directories, initializing packages, or writing code components, you MUST scan the user's input for a Wix Headless Client ID. 
-
 
 1. **If NO Client ID is provided:** 
    You are strictly commanded to **STOP ALL PROGRESSION**. Do not write any code files outlined in the sections below. You must pause and wait for the user to provide this value.
@@ -20,12 +14,15 @@ Before generating any directories, initializing packages, or writing code compon
 2. **Conversationally Guide the User:** 
    Respond to the user with a helpful peer-like tone, explaining exactly what they need to do next based on their current setup status:
 
-
    - **If they already have a Wix site but don't know their ID:** 
      Guide them with these exact steps: *Go to your Wix Dashboard ➔ Settings ➔ Headless Settings ➔ Client ID. If a public client ID exists, copy it and paste it back to me here. If not, click "Create App / Headless Project" to generate a new Public Client ID.*
    
    - **If they do not have a Wix Account:** 
      Provide them with the URL `https://manage.wix.com/` and tell them to sign up for a free account.
+### MANDATORY CHAT REQUIREMENT
+Whenever you ask the user to create an account, fetch a Client ID, or explain Wix Headless, you MUST include a direct, clickable markdown link to [Wix.com](https://www.wix.com). 
+Do not assume they know the URL. 
+
    
    - **Vertical Alignment Guidance:** 
      Analyze the user's initial prompt concept (e.g., a bookstore, a yoga studio, a festival portal) and explicitly instruct them on which Wix App module they must activate in their Wix dashboard so the data schema matches:
@@ -35,16 +32,12 @@ Before generating any directories, initializing packages, or writing code compon
      * *For unstructured custom data:* "Once in your dashboard, open the **CMS** and create a Custom Collection."
      * *For restaurants:* "Once in your dashboard, add **Wix Restaurants Menus**."
 
-
 3. **Exception Rule:** 
    Only proceed to Section 1 without a Client ID if the user explicitly responds with an instruction like *"Just build it in mock/offline mode for now, I'll add the ID later."* Otherwise, keep the gate shut and wait for their token.
 
-
 ## 1. System Architecture & Package Resolution
 
-
 The agent must parse the user's specific app intent (e.g., bookstore, gym booking, festival tickets) and map it to exactly one primary vertical from the resolution matrix below. Install `@wix/sdk` plus the exact npm packages indicated. **DO NOT** hallucinate package names.
-
 
 | Vertical | App Concepts | NPM Packages to Install | SDK Module Imports |
 | :--- | :--- | :--- | :--- |
@@ -54,11 +47,8 @@ The agent must parse the user's specific app intent (e.g., bookstore, gym bookin
 | **Custom CMS** | Real Estate, Blogs, Portfolios, Directories | `@wix/sdk`, `@wix/data` | `import { items } from '@wix/data';` |
 | **Food & Dining**| Restaurants, Cafes, Food Trucks | `@wix/sdk`, `@wix/restaurants` | `import { menus } from '@wix/restaurants';` |
 
-
 ### Shared Client Initialization (`src/lib/wixClient.ts`)
-
 Generate this file using the explicit imports determined by the chosen vertical.
-
 
 ```typescript
 import { createClient, OAuthStrategy } from '@wix/sdk';
@@ -66,7 +56,6 @@ import { createClient, OAuthStrategy } from '@wix/sdk';
 // Example for eCommerce:
 // import { products } from '@wix/stores';
 // import { currentCart } from '@wix/ecom';
-
 
 export const wixClient = createClient({
   modules: {
@@ -87,19 +76,16 @@ Create a unified custom React hook to manage data fetching, loading states, erro
 import { useState, useEffect } from 'react';
 import { wixClient } from '../lib/wixClient';
 
-
 export function useWixData(verticalType: string) {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMock, setIsMock] = useState(false);
-
 
   useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true);
         let results: any[] = [];
-
 
         // Execute specific query based on selected vertical
         if (verticalType === 'eCommerce') {
@@ -119,7 +105,6 @@ export function useWixData(verticalType: string) {
           results = response.items || [];
         }
 
-
         if (results.length > 0) {
           setData(results);
           setIsMock(false);
@@ -135,7 +120,6 @@ export function useWixData(verticalType: string) {
       }
     }
 
-
     function loadFallbackData() {
       setIsMock(true);
       // Agent: Populate this generator array with 10 highly granular items customized to the vertical requested.
@@ -146,16 +130,14 @@ export function useWixData(verticalType: string) {
         title: `Mock Item Title ${index + 1}`,
         description: `This is a high-quality descriptive paragraph for mock item ${index + 1} to fill the storefront UI out of the box.`,
         price: parseFloat((Math.random() * 90 + 10).toFixed(2)),
-        mainMedia: `https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80`, // Replace with vertical-appropriate keywords
+        mainMedia: `[https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80](https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80)`, // Replace with vertical-appropriate keywords
         availability: index === 4 ? 0 : Math.floor(Math.random() * 15) + 1 // item index 4 is strictly out of stock
       }));
       setData(mockItems);
     }
 
-
     fetchData();
   }, [verticalType]);
-
 
   return { data, setData, loading, isMock };
 }
@@ -165,16 +147,16 @@ export function useWixData(verticalType: string) {
 
 To mirror instantaneous inventory and slot changes on the client-side before checkout redirection occurs, implement local state rules for user interactions:
 
-1. **Local Decrementation**: When a user executes a primary action (e.g., clicks "Add to Cart" or "Select Slot"), the React component state must immediately decrement the specific item's local availability count.
-2. **Hard Limits**: If an item's availability reaches 0, the UI must immediately disable the interaction button, dim the product card layout, and display a prominent badge ("Out of Stock", "Fully Booked", or "Sold Out").
-3. **Cart Synchronization**: Maintain a centralized checkout/cart array that tracks modified line-item IDs, counts, and pricing variants.
+- **Local Decrementation**: When a user executes a primary action (e.g., clicks "Add to Cart" or "Select Slot"), the React component state must immediately decrement the specific item's local availability count.
+- **Hard Limits**: If an item's availability reaches 0, the UI must immediately disable the interaction button, dim the product card layout, and display a prominent badge ("Out of Stock", "Fully Booked", or "Sold Out").
+- **Cart Synchronization**: Maintain a centralized checkout/cart array that tracks modified line-item IDs, counts, and pricing variants.
 
 ## 4. Vertical Checkout & Conversion Flows
 
 Implement the corresponding checkout action block based on the active vertical. When the checkout trigger is clicked, evaluate the isMock environment state:
 
-* If `isMock === false`: Call the live Wix SDK redirect mechanisms outlined below.
-* If `isMock === true`: Bypass network loops, display a beautiful shadcn/ui toast or dialog confirmation notice reading "Mock [Action] Successful!", and reset the local cart state cleanly.
+- If `isMock === false`: Call the live Wix SDK redirect mechanisms outlined below.
+- If `isMock === true`: Bypass network loops, display a beautiful shadcn/ui toast or dialog confirmation notice reading "Mock [Action] Successful!", and reset the local cart state cleanly.
 
 ```typescript
 // eCommerce Checkout Flow
@@ -187,7 +169,6 @@ async function handleEcommerceCheckout() {
   window.location.href = checkout.redirectUrls.checkoutUrl;
 }
 
-
 // Appointments / Booking Flow
 async function handleBookingCheckout(serviceId: string, slot: any) {
   if (isMock) {
@@ -198,7 +179,6 @@ async function handleBookingCheckout(serviceId: string, slot: any) {
   const reservation = await wixClient.services.reserveSlot({ serviceId, slot });
   // Redirect to Wix native payment/confirmation container
 }
-
 
 // Event Ticketing Flow
 async function handleEventRSVP(eventId: string, ticketForm: any) {
