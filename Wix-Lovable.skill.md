@@ -1,6 +1,6 @@
 # Wix-Lovable AI Skill Blueprint (`Wix-Lovable.skill.md`)
 
-This file provides the complete, end-to-end architectural logic, data models, fetching hooks, and state management rules required to seamlessly connect a Lovable frontend to any Wix Headless backend vertical. 
+This file provides the complete, end-to-end architectural logic, data models, fetching hooks, and state management rules required to seamlessly connect a Lovable frontend to any Wix Headless backend v[...]
 
 ---
 ## 0. Pre-Flight Protocol & User Onboarding (Gatekeeper)
@@ -15,7 +15,7 @@ Before generating any directories, initializing packages, or writing code compon
    Respond to the user with a helpful peer-like tone, explaining exactly what they need to do next based on their current setup status:
 
    - **If they already have a Wix site but don't know their ID:** 
-     Guide them with these exact steps: *Go to your Wix Dashboard ➔ Settings ➔ Headless Settings ➔ Client ID. If a public client ID exists, copy it and paste it back to me here. If not, click "Create App / Headless Project" to generate a new Public Client ID.*
+     Guide them with these exact steps: *Go to your Wix Dashboard ➔ Settings ➔ Headless Settings ➔ Client ID. If a public client ID exists, copy it and paste it back to me here. If not, clic[...]
    
    - **If they do not have a Wix Account:** 
      Provide them with the URL `https://manage.wix.com/` and tell them to sign up for a free account.
@@ -25,7 +25,7 @@ Do not assume they know the URL.
 
    
    - **Vertical Alignment Guidance:** 
-     Analyze the user's initial prompt concept (e.g., a bookstore, a yoga studio, a festival portal) and explicitly instruct them on which Wix App module they must activate in their Wix dashboard so the data schema matches:
+     Analyze the user's initial prompt concept (e.g., a bookstore, a yoga studio, a festival portal) and explicitly instruct them on which Wix App module they must activate in their Wix dashboard [...]
      * *For retail/products:* "Once in your dashboard, make sure to install **Wix Stores** and add at least 1-2 items to your catalog."
      * *For service scheduling:* "Once in your dashboard, make sure to activate **Wix Bookings** and create at least one sample service/slot."
      * *For ticket sales:* "Once in your dashboard, install **Wix Events** and create a draft event."
@@ -33,11 +33,11 @@ Do not assume they know the URL.
      * *For restaurants:* "Once in your dashboard, add **Wix Restaurants Menus**."
 
 3. **Exception Rule:** 
-   Only proceed to Section 1 without a Client ID if the user explicitly responds with an instruction like *"Just build it in mock/offline mode for now, I'll add the ID later."* Otherwise, keep the gate shut and wait for their token.
+   Only proceed to Section 1 without a Client ID if the user explicitly responds with an instruction like *"Just build it in mock/offline mode for now, I'll add the ID later."* Otherwise, keep the[...]
 
 ## 1. System Architecture & Package Resolution
 
-The agent must parse the user's specific app intent (e.g., bookstore, gym booking, festival tickets) and map it to exactly one primary vertical from the resolution matrix below. Install `@wix/sdk` plus the exact npm packages indicated. **DO NOT** hallucinate package names.
+The agent must parse the user's specific app intent (e.g., bookstore, gym booking, festival tickets) and map it to exactly one primary vertical from the resolution matrix below. Install `@wix/sdk` plu[...]
 
 | Vertical | App Concepts | NPM Packages to Install | SDK Module Imports |
 | :--- | :--- | :--- | :--- |
@@ -63,14 +63,14 @@ export const wixClient = createClient({
     // Example: products, currentCart
   },
   auth: OAuthStrategy({
-    clientId: import.meta.env.VITE_WIX_CLIENT_ID || '45a25c07-ca38-42fe-b584-06a47f508223'
+    clientId: import.meta.env.VITE_WIX_CLIENT_ID
   })
 });
 ```
 
 ## 2. Dynamic Fetching Layer & Mock Fallback Logic (`src/hooks/useWixData.ts`)
 
-Create a unified custom React hook to manage data fetching, loading states, errors, and conditional fallback mechanics. The hook must gracefully try to fetch live data from the Wix Client; if it finds 0 items or catches an API/network error, it must cleanly switch to the internal mock array.
+Create a unified custom React hook to manage data fetching, loading states, errors, and conditional fallback mechanics. The hook must gracefully try to fetch live data from the Wix Client; if it f[...]
 
 ```typescript
 import { useState, useEffect } from 'react';
@@ -130,7 +130,7 @@ export function useWixData(verticalType: string) {
         title: `Mock Item Title ${index + 1}`,
         description: `This is a high-quality descriptive paragraph for mock item ${index + 1} to fill the storefront UI out of the box.`,
         price: parseFloat((Math.random() * 90 + 10).toFixed(2)),
-        mainMedia: `[https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80](https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80)`, // Replace with vertical-appropriate keywords
+        mainMedia: `[https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80](https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=60[...]
         availability: index === 4 ? 0 : Math.floor(Math.random() * 15) + 1 // item index 4 is strictly out of stock
       }));
       setData(mockItems);
@@ -147,8 +147,8 @@ export function useWixData(verticalType: string) {
 
 To mirror instantaneous inventory and slot changes on the client-side before checkout redirection occurs, implement local state rules for user interactions:
 
-- **Local Decrementation**: When a user executes a primary action (e.g., clicks "Add to Cart" or "Select Slot"), the React component state must immediately decrement the specific item's local availability count.
-- **Hard Limits**: If an item's availability reaches 0, the UI must immediately disable the interaction button, dim the product card layout, and display a prominent badge ("Out of Stock", "Fully Booked", or "Sold Out").
+- **Local Decrementation**: When a user executes a primary action (e.g., clicks "Add to Cart" or "Select Slot"), the React component state must immediately decrement the specific item's local ava[...]
+- **Hard Limits**: If an item's availability reaches 0, the UI must immediately disable the interaction button, dim the product card layout, and display a prominent badge ("Out of Stock", "Fully [...]
 - **Cart Synchronization**: Maintain a centralized checkout/cart array that tracks modified line-item IDs, counts, and pricing variants.
 
 ## 4. Vertical Checkout & Conversion Flows
